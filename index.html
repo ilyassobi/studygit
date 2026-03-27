@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KlikMasjid — Prototype Monetisasi</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background: #f0fdf4;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    .screen {
+      display: none;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    .nav-btn {
+      flex: 1;
+      padding: 8px 4px;
+      border: none;
+      background: transparent;
+      border-radius: 8px;
+      font-size: 12px;
+      color: #6b7280;
+      cursor: pointer;
+      transition: all .15s;
+    }
+
+    .nav-btn.active {
+      background: white;
+      color: #111827;
+      font-weight: 500;
+      border: 1px solid #e5e7eb;
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      cursor: pointer;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      inset: 0;
+      background: #d1d5db;
+      border-radius: 12px;
+      transition: .2s;
+    }
+
+    .toggle-slider:before {
+      content: '';
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      left: 3px;
+      bottom: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: .2s;
+    }
+
+    input:checked+.toggle-slider {
+      background: #065f46;
+    }
+
+    input:checked+.toggle-slider:before {
+      transform: translateX(20px);
+    }
+
+    .progress-bar {
+      height: 6px;
+      background: #e5e7eb;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+
+<body class="min-h-screen flex items-center justify-center p-4">
+
+  <div class="max-w-sm w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200">
+
+    <!-- NAV -->
+    <div class="p-3 pb-2">
+      <div class="flex gap-1 bg-gray-100 rounded-xl p-1">
+        <button class="nav-btn active" onclick="show('donasi')">Donasi</button>
+        <button class="nav-btn" onclick="show('vendor')">Vendor</button>
+        <button class="nav-btn" onclick="show('revenue')">Revenue</button>
+        <button class="nav-btn" onclick="show('b2b')">B2B</button>
+      </div>
+    </div>
+
+    <!-- ===== DONASI ===== -->
+    <div id="s-donasi" class="screen active">
+      <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+        <span class="font-medium text-gray-900 text-sm">Donasi — Sound System</span>
+        <span class="text-xs bg-amber-50 text-amber-700 px-2 py-1 rounded-full">Galang Dana</span>
+      </div>
+      <div class="p-4">
+        <div class="text-xs text-gray-500 mb-2">Masjid Al-Ikhlas • Target Rp 1.000.000</div>
+        <div class="progress-bar mb-1">
+          <div class="progress-fill bg-emerald-600" style="width:72%"></div>
+        </div>
+        <div class="flex justify-between text-xs text-gray-500 mb-4"><span>Rp 720.000 terkumpul</span><span>24
+            donatur</span></div>
+
+        <div class="grid grid-cols-3 gap-2 mb-3" id="nomGrid">
+          <button onclick="setNom(25000,this)"
+            class="py-2 text-xs border border-gray-200 rounded-lg bg-gray-50 text-gray-700 cursor-pointer">Rp
+            25rb</button>
+          <button onclick="setNom(50000,this)"
+            class="py-2 text-xs border-2 border-emerald-600 rounded-lg bg-emerald-50 text-emerald-700 font-medium cursor-pointer">Rp
+            50rb</button>
+          <button onclick="setNom(100000,this)"
+            class="py-2 text-xs border border-gray-200 rounded-lg bg-gray-50 text-gray-700 cursor-pointer">Rp
+            100rb</button>
+          <button onclick="setNom(200000,this)"
+            class="py-2 text-xs border border-gray-200 rounded-lg bg-gray-50 text-gray-700 cursor-pointer">Rp
+            200rb</button>
+          <button onclick="setNom(500000,this)"
+            class="py-2 text-xs border border-gray-200 rounded-lg bg-gray-50 text-gray-700 cursor-pointer">Rp
+            500rb</button>
+          <button onclick="setNom(-1,this)"
+            class="py-2 text-xs border border-gray-200 rounded-lg bg-gray-50 text-gray-700 cursor-pointer">Lainnya</button>
+        </div>
+
+        <div id="customInput" class="hidden mb-3">
+          <input type="number" placeholder="Masukkan nominal..." oninput="updateFee()" id="customNom"
+            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-emerald-500">
+        </div>
+
+        <div class="border-t border-gray-100 my-3"></div>
+        <div class="text-xs font-medium text-gray-700 mb-2">Pilih mode donasi:</div>
+
+        <div id="toggleRow" onclick="toggleFee()"
+          class="flex items-center justify-between p-3 bg-emerald-50 rounded-xl mb-3 cursor-pointer">
+          <div>
+            <div class="text-sm font-medium text-gray-900" id="toggleLabel">Donasi 100% ke Masjid</div>
+            <div class="text-xs text-gray-500" id="toggleDesc">Saya menambahkan biaya ops sukarela</div>
+          </div>
+          <label class="toggle-switch" onclick="event.stopPropagation();updateToggle()">
+            <input type="checkbox" id="feeToggle" checked onchange="updateToggle()">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 mb-3" id="feeDisplay">
+          <div class="flex justify-between text-sm mb-1"><span class="text-gray-500">Donasi ke masjid</span><span
+              class="font-medium" id="toMasjid">Rp 50.000</span></div>
+          <div class="flex justify-between text-sm mb-2" id="opsRow"><span class="text-emerald-600">+ Biaya operasional
+              (sukarela)</span><span class="text-emerald-600 font-medium" id="opsAmount">Rp 1.250</span></div>
+          <div class="flex justify-between text-sm font-medium border-t border-emerald-200 pt-2"><span>Total kamu
+              membayar</span><span class="text-base" id="totalAmount">Rp 51.250</span></div>
+        </div>
+
+        <div class="bg-amber-50 border-l-4 border-amber-400 rounded-r-lg p-3 mb-3 text-xs text-amber-800" id="infoBox">
+          Biaya operasional 2.5% untuk server, pengembangan fitur, dan tim verifikasi vendor — agar platform tetap
+          berjalan.
+        </div>
+
+        <button class="w-full py-3 bg-emerald-700 text-white text-sm font-medium rounded-xl mb-2 hover:bg-emerald-800"
+          onclick="alert('Lanjut ke pembayaran!\n\nTotal: ' + document.getElementById(\'totalAmount\').textContent + '\nMetode: QRIS / Transfer Bank / GoPay / OVO')">Lanjut
+          ke Pembayaran</button>
+        <div class="text-center text-xs text-gray-400">Dana ditahan di escrow sampai pekerjaan diverifikasi</div>
+      </div>
+    </div>
+
+    <!-- ===== VENDOR ===== -->
+    <div id="s-vendor" class="screen">
+      <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+        <span class="font-medium text-gray-900 text-sm">Marketplace Vendor</span>
+        <span class="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full">Komisi 10%</span>
+      </div>
+      <div class="p-4">
+        <div class="border border-gray-200 border-t-4 border-t-blue-500 rounded-xl p-4 mb-4">
+          <div class="text-xs text-gray-500 mb-1">Tiket Aktif untuk Vendor</div>
+          <div class="text-sm font-medium mb-1">Sound System Rusak — Al-Ikhlas</div>
+          <div class="text-xs text-gray-500 mb-3">Elektronik • Dana Siap: Rp 1.000.000</div>
+          <div class="bg-blue-50 rounded-lg p-3 mb-3">
+            <div class="text-xs font-medium text-blue-700 mb-2">Kalkulasi Komisi Platform</div>
+            <div class="flex justify-between text-xs mb-1"><span class="text-gray-500">Nilai proyek</span><span>Rp
+                1.000.000</span></div>
+            <div class="flex justify-between text-xs mb-2"><span class="text-gray-500">Komisi platform (10%)</span><span
+                class="text-red-500">- Rp 100.000</span></div>
+            <div class="flex justify-between text-sm font-medium border-t border-blue-200 pt-2"><span>Vendor terima
+                bersih</span><span class="text-emerald-600">Rp 900.000</span></div>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <button class="py-2 text-xs border border-gray-200 rounded-lg bg-gray-50 text-gray-700">Lihat
+              Detail</button>
+            <button class="py-2 text-xs bg-emerald-700 text-white rounded-lg font-medium"
+              onclick="alert('Penawaran terkirim!\nAdmin masjid akan menghubungi dalam 24 jam.')">Ambil Proyek</button>
+          </div>
+        </div>
+
+        <div class="text-sm font-medium mb-3 text-gray-900">Vendor di Area Ini</div>
+        <div class="border border-gray-100 rounded-xl divide-y divide-gray-50">
+          <div class="flex items-center gap-3 p-3">
+            <div
+              class="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center text-xs font-medium text-blue-700">
+              CV</div>
+            <div class="flex-1">
+              <div class="text-sm font-medium">CV Bersih Bersama</div>
+              <div class="text-xs text-gray-500">Cleaning • 47 proyek</div>
+            </div>
+            <div class="text-right">
+              <div class="text-xs text-amber-400">★★★★★</div><span
+                class="text-xs bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full">Promoted</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 p-3">
+            <div
+              class="w-9 h-9 rounded-lg bg-purple-100 flex items-center justify-center text-xs font-medium text-purple-700">
+              TS</div>
+            <div class="flex-1">
+              <div class="text-sm font-medium">Teknisi Soni Elektronik</div>
+              <div class="text-xs text-gray-500">Elektronik • 23 proyek</div>
+            </div>
+            <div class="text-right">
+              <div class="text-xs text-amber-400">★★★★☆</div><span
+                class="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">Standar</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 p-3">
+            <div
+              class="w-9 h-9 rounded-lg bg-emerald-100 flex items-center justify-center text-xs font-medium text-emerald-700">
+              PB</div>
+            <div class="flex-1">
+              <div class="text-sm font-medium">Pak Budi Plumbing</div>
+              <div class="text-xs text-gray-500">Plumbing • 31 proyek</div>
+            </div>
+            <div class="text-right">
+              <div class="text-xs text-amber-400">★★★★★</div><span
+                class="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">Promoted</span>
+            </div>
+          </div>
+        </div>
+        <div class="bg-amber-50 border-l-4 border-amber-400 rounded-r-lg p-3 mt-3 text-xs text-amber-800">Badge
+          "Promoted" = vendor membayar Rp 199rb/bulan untuk tampil di urutan teratas.</div>
+      </div>
+    </div>
+
+    <!-- ===== REVENUE ===== -->
+    <div id="s-revenue" class="screen">
+      <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+        <span class="font-medium text-gray-900 text-sm">Revenue Dashboard</span>
+        <span class="text-xs bg-emerald-50 text-emerald-700 px-2 py-1 rounded-full">Juni 2025</span>
+      </div>
+      <div class="p-4">
+        <div class="grid grid-cols-2 gap-2 mb-4">
+          <div class="bg-gray-50 rounded-xl p-3">
+            <div class="text-xl font-medium text-emerald-600">Rp 12.4jt</div>
+            <div class="text-xs text-gray-500 mt-1">Total Revenue</div>
+          </div>
+          <div class="bg-gray-50 rounded-xl p-3">
+            <div class="text-xl font-medium text-blue-600">Rp 8.2jt</div>
+            <div class="text-xs text-gray-500 mt-1">Dana Tersalurkan</div>
+          </div>
+          <div class="bg-gray-50 rounded-xl p-3">
+            <div class="text-xl font-medium text-purple-600">247</div>
+            <div class="text-xs text-gray-500 mt-1">Donasi Masuk</div>
+          </div>
+          <div class="bg-gray-50 rounded-xl p-3">
+            <div class="text-xl font-medium text-amber-600">43</div>
+            <div class="text-xs text-gray-500 mt-1">Proyek Vendor</div>
+          </div>
+        </div>
+
+        <div class="text-sm font-medium mb-3 text-gray-900">Breakdown per Revenue Stream</div>
+
+        <div class="border border-gray-100 border-t-4 border-t-emerald-600 rounded-xl p-3 mb-2">
+          <div class="flex justify-between items-start mb-2">
+            <div>
+              <div class="text-xs font-medium">Stream 1 — Platform Fee</div>
+              <div class="text-xs text-gray-400">247 donasi × avg 2.3%</div>
+            </div>
+            <div class="text-right">
+              <div class="text-base font-medium text-emerald-600">Rp 3.2jt</div><span
+                class="text-xs bg-emerald-50 text-emerald-700 px-2 rounded-full">Aktif</span>
+            </div>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill bg-emerald-500" style="width:64%"></div>
+          </div>
+          <div class="text-xs text-gray-400 mt-1">64% dari target Rp 5jt</div>
+        </div>
+
+        <div class="border border-gray-100 border-t-4 border-t-blue-500 rounded-xl p-3 mb-2">
+          <div class="flex justify-between items-start mb-2">
+            <div>
+              <div class="text-xs font-medium">Stream 2 — Vendor Commission</div>
+              <div class="text-xs text-gray-400">43 proyek × avg 10%</div>
+            </div>
+            <div class="text-right">
+              <div class="text-base font-medium text-blue-600">Rp 6.1jt</div><span
+                class="text-xs bg-blue-50 text-blue-700 px-2 rounded-full">Aktif</span>
+            </div>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill bg-blue-500" style="width:81%"></div>
+          </div>
+          <div class="text-xs text-gray-400 mt-1">81% dari target Rp 7.5jt</div>
+        </div>
+
+        <div class="border border-gray-100 border-t-4 border-t-purple-500 rounded-xl p-3 mb-2">
+          <div class="flex justify-between items-start mb-2">
+            <div>
+              <div class="text-xs font-medium">Stream 3 — B2B / CSR</div>
+              <div class="text-xs text-gray-400">2 korporat aktif</div>
+            </div>
+            <div class="text-right">
+              <div class="text-base font-medium text-purple-600">Rp 2.0jt</div><span
+                class="text-xs bg-purple-50 text-purple-700 px-2 rounded-full">Aktif</span>
+            </div>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill bg-purple-500" style="width:40%"></div>
+          </div>
+          <div class="text-xs text-gray-400 mt-1">40% dari target. Pipeline: 3 leads</div>
+        </div>
+
+        <div class="border border-gray-100 border-t-4 border-t-amber-500 rounded-xl p-3 mb-2">
+          <div class="flex justify-between items-start mb-2">
+            <div>
+              <div class="text-xs font-medium">Stream 4 — In-App Ads</div>
+              <div class="text-xs text-gray-400">8 iklan + 5 promoted listing</div>
+            </div>
+            <div class="text-right">
+              <div class="text-base font-medium text-amber-600">Rp 1.1jt</div><span
+                class="text-xs bg-amber-50 text-amber-700 px-2 rounded-full">Aktif</span>
+            </div>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill bg-amber-500" style="width:37%"></div>
+          </div>
+          <div class="text-xs text-gray-400 mt-1">37% dari target. Ramadan boost +300%</div>
+        </div>
+
+        <div class="border border-gray-100 border-t-4 border-t-teal-500 rounded-xl p-3 opacity-60">
+          <div class="flex justify-between items-start">
+            <div>
+              <div class="text-xs font-medium">Stream 5 — Zakat/Wakaf</div>
+              <div class="text-xs text-gray-400">Menunggu endorsement Baznas</div>
+            </div>
+            <div class="text-right">
+              <div class="text-base font-medium text-gray-400">—</div><span
+                class="text-xs bg-gray-100 text-gray-500 px-2 rounded-full">Fase 3</span>
+            </div>
+          </div>
+          <div class="text-xs text-gray-400 mt-2 italic">Aktif setelah izin resmi MUI/Baznas diperoleh</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== B2B ===== -->
+    <div id="s-b2b" class="screen">
+      <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+        <span class="font-medium text-gray-900 text-sm">B2B & CSR Dashboard</span>
+        <span class="text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded-full">Enterprise</span>
+      </div>
+      <div class="p-4">
+        <div class="text-xs text-gray-500 mb-3">PT Maju Bersama Indonesia — CSR Program 2025</div>
+
+        <div class="border border-gray-100 border-t-4 border-t-purple-500 rounded-xl p-4 mb-4">
+          <div class="flex items-center gap-3 mb-4">
+            <div
+              class="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center text-sm font-medium text-purple-700">
+              PT</div>
+            <div>
+              <div class="text-sm font-medium">PT Maju Bersama Indonesia</div>
+              <div class="text-xs text-gray-500">Official Partner — Kategori Pengecatan</div>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div class="bg-gray-50 rounded-lg p-3">
+              <div class="text-lg font-medium text-purple-600">Rp 50jt</div>
+              <div class="text-xs text-gray-500">Budget CSR</div>
+            </div>
+            <div class="bg-gray-50 rounded-lg p-3">
+              <div class="text-lg font-medium text-emerald-600">Rp 32jt</div>
+              <div class="text-xs text-gray-500">Tersalurkan</div>
+            </div>
+            <div class="bg-gray-50 rounded-lg p-3">
+              <div class="text-lg font-medium text-blue-600">18</div>
+              <div class="text-xs text-gray-500">Masjid Dibantu</div>
+            </div>
+            <div class="bg-gray-50 rounded-lg p-3">
+              <div class="text-lg font-medium text-amber-600">64%</div>
+              <div class="text-xs text-gray-500">Penyerapan</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-sm font-medium mb-3 text-gray-900">Penyaluran Real-Time</div>
+        <div class="border border-gray-100 rounded-xl divide-y divide-gray-50 mb-4">
+          <div class="flex justify-between items-center p-3">
+            <div>
+              <div class="text-xs font-medium">Al-Ikhlas — Cat Eksterior</div>
+              <div class="text-xs text-gray-400">2 hari lalu</div>
+            </div>
+            <div class="text-right">
+              <div class="text-sm font-medium text-emerald-600">Rp 3.5jt</div><span
+                class="text-xs bg-emerald-50 text-emerald-700 px-2 rounded-full">Selesai ✓</span>
+            </div>
+          </div>
+          <div class="flex justify-between items-center p-3">
+            <div>
+              <div class="text-xs font-medium">Baiturrohman — Cat Interior</div>
+              <div class="text-xs text-gray-400">5 hari lalu</div>
+            </div>
+            <div class="text-right">
+              <div class="text-sm font-medium text-blue-600">Rp 4.2jt</div><span
+                class="text-xs bg-blue-50 text-blue-700 px-2 rounded-full">Proses</span>
+            </div>
+          </div>
+          <div class="flex justify-between items-center p-3">
+            <div>
+              <div class="text-xs font-medium">Nurul Huda — Cat Pagar</div>
+              <div class="text-xs text-gray-400">1 minggu lalu</div>
+            </div>
+            <div class="text-right">
+              <div class="text-sm font-medium text-emerald-600">Rp 1.8jt</div><span
+                class="text-xs bg-emerald-50 text-emerald-700 px-2 rounded-full">Selesai ✓</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-amber-50 border-l-4 border-amber-400 rounded-r-lg p-3 mb-3 text-xs text-amber-800">Dashboard SaaS
+          ini dikenakan Rp 5–15 juta/bulan. Fitur: real-time tracking + laporan dampak + branding "Didukung oleh [Merk
+          X]".</div>
+
+        <button class="w-full py-3 bg-purple-700 text-white text-sm font-medium rounded-xl hover:bg-purple-800"
+          onclick="alert('Unduh Laporan Dampak CSR\nFormat: PDF\nPeriode: Juni 2025\n\n18 Masjid dibantu\nRp 32 Juta Tersalurkan\n100% Terverifikasi dengan Foto Before/After')">Unduh
+          Laporan Dampak CSR</button>
+      </div>
+    </div>
+
+    <!-- TAB BAR -->
+    <div class="flex bg-white border-t border-gray-100 py-2">
+      <div class="flex-1 flex flex-col items-center gap-0.5 cursor-pointer" onclick="show('donasi')">
+        <span class="text-lg">💳</span><span class="text-xs text-gray-500" id="t-donasi">Donasi</span>
+      </div>
+      <div class="flex-1 flex flex-col items-center gap-0.5 cursor-pointer" onclick="show('vendor')">
+        <span class="text-lg">🔧</span><span class="text-xs text-gray-500" id="t-vendor">Vendor</span>
+      </div>
+      <div class="flex-1 flex flex-col items-center gap-0.5 cursor-pointer" onclick="show('revenue')">
+        <span class="text-lg">📈</span><span class="text-xs text-gray-500" id="t-revenue">Revenue</span>
+      </div>
+      <div class="flex-1 flex flex-col items-center gap-0.5 cursor-pointer" onclick="show('b2b')">
+        <span class="text-lg">🏢</span><span class="text-xs text-gray-500" id="t-b2b">B2B</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentNom = 50000;
+    function show(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById('s-' + id).classList.add('active');
+      document.querySelectorAll('.nav-btn').forEach((b, i) => {
+        b.classList.remove('active');
+        if (['donasi', 'vendor', 'revenue', 'b2b'][i] === id) b.classList.add('active');
+      });
+      ['donasi', 'vendor', 'revenue', 'b2b'].forEach(t => {
+        const el = document.getElementById('t-' + t);
+        el.style.color = t === id ? '#065f46' : '#6b7280';
+        el.style.fontWeight = t === id ? '500' : '400';
+      });
+    }
+    function setNom(val, el) {
+      document.querySelectorAll('#nomGrid button').forEach(b => {
+        b.style.border = '1px solid #e5e7eb';
+        b.style.background = '#f9fafb';
+        b.style.color = '#374151';
+        b.style.fontWeight = '400';
+      });
+      el.style.border = '2px solid #065f46';
+      el.style.background = '#ecfdf5';
+      el.style.color = '#065f46';
+      el.style.fontWeight = '500';
+      if (val === -1) {
+        document.getElementById('customInput').style.display = 'block';
+        currentNom = 0;
+      } else {
+        document.getElementById('customInput').style.display = 'none';
+        currentNom = val;
+      }
+      updateFee();
+    }
+    function updateFee() {
+      const customEl = document.getElementById('customNom');
+      if (customEl && customEl.value) currentNom = parseInt(customEl.value) || 0;
+      const isZeroFee = document.getElementById('feeToggle').checked;
+      const fee = isZeroFee ? Math.round(currentNom * 0.025) : 0;
+      const deducted = !isZeroFee ? Math.round(currentNom * 0.025) : 0;
+      const toMasjid = isZeroFee ? currentNom : currentNom - deducted;
+      const total = isZeroFee ? currentNom + fee : currentNom;
+      document.getElementById('toMasjid').textContent = 'Rp ' + toMasjid.toLocaleString('id-ID');
+      document.getElementById('opsAmount').textContent = 'Rp ' + (isZeroFee ? fee : deducted).toLocaleString('id-ID');
+      document.getElementById('totalAmount').textContent = 'Rp ' + total.toLocaleString('id-ID');
+      document.getElementById('opsRow').style.display = 'flex';
+    }
+    function updateToggle() {
+      const isChecked = document.getElementById('feeToggle').checked;
+      const lbl = document.getElementById('toggleLabel');
+      const desc = document.getElementById('toggleDesc');
+      const info = document.getElementById('infoBox');
+      const row = document.getElementById('toggleRow');
+      if (isChecked) {
+        lbl.textContent = 'Donasi 100% ke Masjid';
+        desc.textContent = 'Saya menambahkan biaya ops sukarela';
+        info.textContent = 'Biaya operasional 2.5% untuk server, pengembangan fitur, dan tim verifikasi vendor — agar platform tetap berjalan.';
+        row.style.background = '#ecfdf5';
+        document.getElementById('opsRow').querySelector('span:first-child').textContent = '+ Biaya operasional (sukarela)';
+      } else {
+        lbl.textContent = 'Donasi Standar (potong 2.5%)';
+        desc.textContent = 'Platform memotong 2.5% otomatis';
+        info.textContent = 'Platform memotong 2.5% dari donasi kamu untuk operasional. Dana ke masjid sedikit berkurang, tapi kamu tidak perlu membayar lebih.';
+        row.style.background = '#f9fafb';
+        document.getElementById('opsRow').querySelector('span:first-child').textContent = '- Dipotong platform (2.5%)';
+      }
+      updateFee();
+    }
+    function toggleFee() {
+      const t = document.getElementById('feeToggle');
+      t.checked = !t.checked;
+      updateToggle();
+    }
+    show('donasi');
+  </script>
+</body>
+
+</html>
